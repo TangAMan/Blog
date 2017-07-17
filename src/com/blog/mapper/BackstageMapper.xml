@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.blog.mapper.BackstageMapper">
+	<!--查找博主  -->
+	<select id="findAuth" parameterType="auth" resultType="auth">
+		select username,password,nickname from auth where username=#{username} and password=#{password}
+	
+	</select>
+	<!--博客总记录数  -->
+	<select id="findAllBlogNum" resultType="int">
+	
+		select count(id) from blogs
+	</select>
+	<!--所有博客  --> 
+	<resultMap type="bloggerExtension" id="AllBlog">
+		<id column="id" property="id" />
+		<result column="title" property="title" />
+		<result column="publishtime" property="publishtime"/>
+		<result column="state" property="state" />
+		<result column="cate" property="cate" />
+		<association property="auth" javaType="auth">
+			<id column="id" property="id" />
+			<result column="nickname" property="nickname" />
+		</association>
+	</resultMap>
+	<select id="findAllBlog" parameterType="queryVo" resultMap="AllBlog" >
+		select * from blogs,auth where blogs.aid=auth.id limit #{thispage},#{pagerow}
+	</select>
+	<!--根据博客id查找博客  -->
+	<resultMap type="bloggerExtension" id="findBlogAndTags">
+		<id column="id" property="id" />
+		<result column="title" property="title" />
+		<result column="context" property="context" />
+		<result column="cate" property="cate" />
+		<result column="state" property="state" />
+		<result column="publishtime" property="publishtime" />
+		<result column="recommend" property="recommend" />
+		<association property="tag" javaType="tag">
+			<result column="tags" property="tags" />
+		</association>
+	
+	</resultMap>
+	<select id="findBlogById" parameterType="String" resultMap="findBlogAndTags">
+	
+		select * from blogs,tag where blogs.id=#{blog_id} and blogs.id=tag.blog_id  
+	</select>
+	<!--更新博客  -->
+	<update id="updateBlogByid" parameterType="bloggerExtension">
+		update blogs set title=#{title},context=#{context},publishtime=#{publishtime},cate=#{cate} where id=#{id}
+	</update>
+	<!--更新标签  -->
+	<update id="updateTagsById" parameterType="tag">
+		update tag set tags=#{tags} where blog_id=#{blog_id}
+	</update>
+	<update id="updateBlogTags" parameterType="tagExtension">
+		update blogtags set tagname=#{tagname} where blog_id=#{blog_id}
+	</update>
+	
+	<!--根据博客id删除博客  -->
+	<delete id="deleteBlogById" parameterType="String">
+		delete from blogs where id=#{blog_id}
+	</delete>
+	<!--根据博客id更新博客状态  -->
+	<update id="updateBlogStateById" parameterType="String">
+		update blogs set state=1 where id=#{blog_id}
+	</update>
+	<!--把博客设置为推荐阅读  -->
+	<update id="recommendBlogById" parameterType="String">
+		update blogs set recommend=1 where id=#{blog_id}
+	</update>
+</mapper>

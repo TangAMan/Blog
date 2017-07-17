@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.blog.mapper.BlogMapper">
+	<!--插入博客  -->
+	<insert id="insertBlog" parameterType="bloggerExtension">
+	
+			<selectKey keyProperty="id" order="BEFORE" resultType="String">
+				select uuid()
+			</selectKey>
+			insert into blogs values(#{id},#{aid},#{title},#{context},#{publishtime},#{state},#{cate},#{src},#{recommend})
+	</insert>
+	<!-- 插入博客的标签 -->
+	<insert id="insertTag" parameterType="tagExtension">
+		<selectKey keyProperty="id" order="BEFORE" resultType="String">
+			select uuid()
+		</selectKey>
+		insert into tag values(#{id},#{blog_id},#{tags})
+		
+	</insert>
+	<!--插入博客标签中间信息  -->
+	<insert id="insertBlogTags" parameterType="tagExtension">
+		<selectKey keyProperty="id" order="BEFORE" resultType="String">
+			select uuid()
+		</selectKey>
+		insert into blogtags values(#{id},#{blog_id},#{tagname})
+	</insert>
+	
+	<!-- 查询多少条博客 -->
+	<select id="getBlogAllRow" resultType="int">
+		select count(id) from blogs
+	</select>
+	<!--分页查询博客  -->
+	<resultMap type="bloggerExtension" id="allblog">
+		<id column="id" property="id"/>
+		<result column="aid"  property="aid"/>
+		<result column="title" property="title"/>
+		<result column="context" property="context"/>
+		<result column="publishtime" property="publishtime"/>
+		<result column="state" property="state"/>
+		<result column="cate" property="cate"/>
+		<result column="src" property="src" />
+		<association property="auth" javaType="auth">
+			<result column="nickname" property="nickname" />
+			<result column="addres" property="addres" />
+			<result column="email" property="email" />
+			<result column="qq" property="qq" />
+			<result column="pic" property="pic" />
+		</association>
+	</resultMap>
+	<!--分页  -->
+	<select id="getPartPage" parameterType="queryVo" resultMap="allblog">
+		select *  from blogs, auth
+		where blogs.aid=auth.id and state=1
+		limit #{thispage},#{pagerow}
+	
+	</select>
+	
+	
+	
+	<!--=========================================================================================  -->
+	
+	<!--按照id查找博客关联查询auth,tags  -->
+	<resultMap type="bloggerExtension" id="findBlogAndAuthTagsById">
+		<id column="id" property="id" />
+		<result column="aid" property="aid" />
+		<result column="title" property="title" />
+		<result column="context" property="context" />
+		<result column="publishtime" property="publishtime" />
+		<result column="state" property="state" />
+		<result column="cate" property="cate" />
+		<result column="src" property="src"  />
+		<association property="auth" javaType="auth">
+			<result column="nickname" property="nickname" />
+		</association>
+		 <collection property="tags" ofType="tagExtension">
+			<result column="tagname" property="tagname" />
+		</collection>
+		
+		
+	</resultMap>
+	<select id="findBlogById" parameterType="String" resultMap="findBlogAndAuthTagsById">
+		select * from blogs,auth,blogtags where blogs.aid=auth.id and blogs.id=blogtags.blog_id and blogs.id=#{blog_id}
+	</select>
+	
+	<!-- 根据博客id查找评论 -->
+	<select id="getAllReviewsById" parameterType="String" resultType="reView">
+		select * from review where blog_id=#{id}
+	</select>
+	<!--根据博客id查找评论量  -->
+	<select id="getReviewNumByBlogId" parameterType="String" resultType="int">
+		select count(*) from review where blog_id=#{id}
+	</select>
+	<!--给指定博客插入评论  -->
+	<insert id="insertReview" parameterType="reView">
+		<selectKey keyProperty="id" order="BEFORE" resultType="String">
+			select uuid()
+		</selectKey>
+		insert into review values(#{id},#{blog_id},#{critic},#{content},#{reviewtime})
+	</insert>
+	<select id="RecommendBlog" resultType="bloggerExtension">
+		select * from blogs where recommend=1
+		
+	</select>
+	
+	<select id="getAuth" resultType="auth">
+		select * from auth
+	</select>
+</mapper>
